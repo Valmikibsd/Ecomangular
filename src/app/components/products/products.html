@@ -1,0 +1,262 @@
+<section class="shop">
+  <aside class="filters">
+    <div class="filters-head">
+      <h2>Filters</h2>
+      <button type="button" (click)="clearFilters()">Clear all</button>
+    </div>
+
+    <label class="search">
+      Search
+      <input [(ngModel)]="filters.search" placeholder="Name, brand, or keyword" />
+    </label>
+
+    <fieldset>
+      <legend>Category</legend>
+      @for (category of categories; track category) {
+        <label class="check">
+          <input
+            type="checkbox"
+            [checked]="filters.categories.includes(category)"
+            (change)="toggle(filters.categories, category)"
+          />
+          {{ category }}
+        </label>
+      }
+    </fieldset>
+
+    <fieldset>
+      <legend>Brand</legend>
+      @for (brand of brands; track brand) {
+        <label class="check">
+          <input
+            type="checkbox"
+            [checked]="filters.brands.includes(brand)"
+            (change)="toggle(filters.brands, brand)"
+          />
+          {{ brand }}
+        </label>
+      }
+    </fieldset>
+
+    <fieldset>
+      <legend>Price</legend>
+      <div class="price-row">
+        <input type="number" min="0" [(ngModel)]="filters.minPrice" placeholder="Min" />
+        <span>—</span>
+        <input type="number" min="0" [(ngModel)]="filters.maxPrice" placeholder="Max" />
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Customer rating</legend>
+      @for (rating of ratings; track rating) {
+        <label class="check">
+          <input type="radio" name="rating" [value]="rating" [(ngModel)]="filters.minRating" />
+          {{ rating }}★ & up
+        </label>
+      }
+      <label class="check">
+        <input type="radio" name="rating" [value]="0" [(ngModel)]="filters.minRating" />
+        Any rating
+      </label>
+    </fieldset>
+
+    <label class="check stock">
+      <input type="checkbox" [(ngModel)]="filters.inStockOnly" />
+      In stock only
+    </label>
+  </aside>
+
+  <div class="catalog">
+    <header class="catalog-bar">
+      <div>
+        <p class="kicker">Customer shop</p>
+        <h1>Store catalog</h1>
+        <p class="count">{{ filtered.length }} item{{ filtered.length === 1 ? '' : 's' }}</p>
+      </div>
+      <div class="bar-right">
+        <button type="button" class="cart-btn" (click)="toggleCart()">
+          🛒 Bag ({{ cartCount }})
+        </button>
+        <label>
+          Sort
+          <select [(ngModel)]="filters.sort">
+            <option value="featured">Featured</option>
+            <option value="price-asc">Price: low to high</option>
+            <option value="price-desc">Price: high to low</option>
+            <option value="rating">Top rated</option>
+            <option value="newest">Newest</option>
+          </select>
+        </label>
+      </div>
+    </header>
+
+    @if (orderSuccessMessage) {
+      <div class="alert-banner success">
+        <span>✅ {{ orderSuccessMessage }}</span>
+        <button type="button" (click)="orderSuccessMessage = ''">✕</button>
+      </div>
+    }
+
+    @if (orderErrorMessage) {
+      <div class="alert-banner error">
+        <span>⚠️ {{ orderErrorMessage }}</span>
+        <button type="button" (click)="orderErrorMessage = ''">✕</button>
+      </div>
+    }
+
+    @if (loading) {
+      <p class="state">Loading your store…</p>
+    } @else if (error) {
+      <p class="state error">{{ error }}</p>
+    } @else if (filtered.length === 0) {
+      <p class="state">No items match these filters.</p>
+    } @else {
+      <div class="grid">
+        @for (product of filtered; track product.id) {
+          <article class="card">
+            <div class="thumb">
+              <img [src]="product.image" [alt]="product.name" />
+              @if (product.stock <= 0) {
+                <span class="badge out">Out of stock</span>
+              } @else if (product.stock < 12) {
+                <span class="badge">Low stock</span>
+              }
+            </div>
+            <div class="body">
+              <p class="meta">{{ product.brand }} · {{ product.category }}</p>
+              <h3>{{ product.name }}</h3>
+              <p class="desc">{{ product.description }}</p>
+              <p class="rating">{{ product.rating | number: '1.1-1' }} ★ ({{ product.reviewCount }})</p>
+              <div class="buy">
+                <strong>{{ product.price | currency }}</strong>
+                <button type="button" [disabled]="product.stock <= 0" (click)="addToCart(product)">
+                  Add to bag
+                </button>
+              </div>
+            </div>
+          </article>
+        }
+      </div>
+    }
+  </div>
+
+  <!-- Shopping Bag / Checkout Drawer -->
+  @if (isCartOpen) {
+    <div class="cart-backdrop" (click)="toggleCart()"></div>
+    <aside class="cart-drawer">
+      <div class="drawer-head">
+        <h2>Your Shopping Bag</h2>
+        <button type="button" class="close-btn" (click)="toggleCart()">✕</button>
+      </div>
+
+      @if (cart.length === 0) {
+        <div class="empty-cart">
+          <p>Your bag is currently empty.</p>
+          <button type="button" (click)="toggleCart()">Continue shopping</button>
+        </div>
+      } @else {
+        <div class="cart-items">
+          @for (item of cart; track item.productId) {
+            <div class="cart-item">
+              <img [src]="item.image || 'https://picsum.photos/seed/default/80/80'" [alt]="item.name" />
+              <div class="item-info">
+                <h4>{{ item.name }}</h4>
+                <p class="price">{{ item.price | currency }} each</p>
+                <div class="qty-controls">
+                  <button type="button" (click)="updateQuantity(item, -1)">−</button>
+                  <span>{{ item.quantity }}</span>
+                  <button type="button" (click)="updateQuantity(item, 1)">+</button>
+                  <button type="button" class="remove-btn" (click)="removeFromCart(item)">Remove</button>
+                </div>
+              </div>
+              <div class="item-subtotal">
+                {{ item.price * item.quantity | currency }}
+              </div>
+            </div>
+          }
+        </div>
+
+        <div class="drawer-footer">
+          <div class="total-row">
+            <span>Total:</span>
+            <strong>{{ cartTotal | currency }}</strong>
+          </div>
+
+          <label class="form-label">
+            Shipping Address:
+            <input type="text" [(ngModel)]="shippingAddress" placeholder="Enter delivery address..." />
+          </label>
+
+          <!-- Dummy Payment Options -->
+          <div class="payment-section">
+            <label class="form-label">Select Payment Method (Dummy):</label>
+            <div class="payment-methods">
+              <label class="pay-radio">
+                <input type="radio" name="payMethod" value="Credit Card" [(ngModel)]="paymentMethod" />
+                💳 Credit Card
+              </label>
+              <label class="pay-radio">
+                <input type="radio" name="payMethod" value="UPI / GPay" [(ngModel)]="paymentMethod" />
+                📱 UPI / GPay
+              </label>
+              <label class="pay-radio">
+                <input type="radio" name="payMethod" value="Cash on Delivery" [(ngModel)]="paymentMethod" />
+                💵 Cash on Delivery
+              </label>
+            </div>
+
+            @if (paymentMethod === 'Credit Card') {
+              <div class="card-details-box">
+                <div class="field-row">
+                  <label>Card Number</label>
+                  <input type="text" [(ngModel)]="cardNumber" placeholder="1234 5678 9101 1121" />
+                </div>
+                <div class="field-row">
+                  <label>Name on Card</label>
+                  <input type="text" [(ngModel)]="cardHolderName" placeholder="Cardholder Name" />
+                </div>
+                <div class="field-split">
+                  <div>
+                    <label>Expiry</label>
+                    <input type="text" [(ngModel)]="expiryDate" placeholder="MM/YY" />
+                  </div>
+                  <div>
+                    <label>CVV</label>
+                    <input type="password" maxlength="4" [(ngModel)]="cvv" placeholder="•••" />
+                  </div>
+                </div>
+                <p class="test-hint">💡 Demo mode: Click Pay to simulate instantaneous verification.</p>
+              </div>
+            } @else if (paymentMethod === 'UPI / GPay') {
+              <div class="card-details-box">
+                <label>UPI ID</label>
+                <input type="text" value="customer@okaxis" readonly />
+                <p class="test-hint">💡 Dummy UPI gateway will auto-authorize upon clicking Place Order.</p>
+              </div>
+            } @else {
+              <div class="card-details-box">
+                <p class="test-hint">💵 Pay with cash upon delivery of your items.</p>
+              </div>
+            }
+          </div>
+
+          <button
+            type="button"
+            class="checkout-btn"
+            [disabled]="placingOrder || cart.length === 0"
+            (click)="checkout()"
+          >
+            @if (simulatingPayment) {
+              <span>🔄 Authorizing payment with bank…</span>
+            } @else if (placingOrder) {
+              <span>⏳ Placing order…</span>
+            } @else {
+              <span>🔒 Pay {{ cartTotal | currency }} & Place Order</span>
+            }
+          </button>
+        </div>
+      }
+    </aside>
+  }
+</section>

@@ -1,0 +1,254 @@
+.store-nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.85rem 2rem;
+  background: #0f172a;
+  color: #fff;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+}
+
+.brand {
+  color: #fff;
+  text-decoration: none;
+  letter-spacing: 0.22em;
+  font-weight: 800;
+  font-size: 0.95rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.links {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+}
+
+.nav-link {
+  color: #cbd5e1;
+  text-decoration: none;
+  font-size: 0.88rem;
+  font-weight: 600;
+  padding: 0.4rem 0.75rem;
+  border-radius: 8px;
+  transition: all 0.2s;
+
+  &:hover,
+  &.active-link {
+    color: #fff;
+    background: rgba(255, 255, 255, 0.08);
+  }
+}
+
+/* Admin Dropdown Container */
+.admin-dropdown-container {
+  position: relative;
+}
+
+.admin-menu-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: rgba(234, 88, 12, 0.15);
+  border: 1px solid #ea580c;
+  color: #ffedd5;
+  padding: 0.45rem 0.9rem;
+  border-radius: 9999px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  .btn-icon {
+    font-size: 1rem;
+  }
+
+  .arrow {
+    font-size: 0.75rem;
+    transition: transform 0.2s ease;
+    &.rotated {
+      transform: rotate(180deg);
+    }
+  }
+
+  &:hover,
+  &.open {
+    background: #ea580c;
+    color: #fff;
+    box-shadow: 0 4px 14px rgba(234, 88, 12, 0.35);
+  }
+}
+
+.menu-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 998;
+}
+
+.dropdown-menu {
+  position: absolute;
+  top: calc(100% + 0.6rem);
+  right: 0;
+  width: 290px;
+  background: #ffffff;
+  border-radius: 14px;
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2), 0 0 1px rgba(0, 0, 0, 0.1);
+  padding: 0.6rem;
+  z-index: 999;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  animation: fadeIn 0.18s ease-out;
+
+  .menu-header {
+    padding: 0.4rem 0.75rem 0.3rem;
+    .menu-title {
+      font-size: 0.68rem;
+      font-weight: 800;
+      color: #94a3b8;
+      letter-spacing: 0.08em;
+    }
+  }
+
+  .menu-option {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.6rem 0.75rem;
+    border-radius: 10px;
+    text-decoration: none;
+    color: #0f172a;
+    transition: all 0.15s ease;
+
+    .option-icon {
+      font-size: 1.25rem;
+      flex-shrink: 0;
+    }
+
+    .option-content {
+      display: flex;
+      flex-direction: column;
+      strong {
+        font-size: 0.88rem;
+        font-weight: 600;
+        color: #0f172a;
+      }
+      small {
+        font-size: 0.75rem;
+        color: #64748b;
+      }
+    }
+
+    &:hover {
+      background: #f1f5f9;
+      transform: translateX(2px);
+      .option-content strong {
+        color: #ea580c;
+      }
+    }
+
+    &.action-option {
+      background: #fff7ed;
+      border: 1px solid #ffedd5;
+      &:hover {
+        background: #ffedd5;
+        border-color: #fed7aa;
+      }
+      .option-content strong {
+        color: #c2410c;
+      }
+    }
+  }
+
+  .menu-divider {
+    height: 1px;
+    background: #e2e8f0;
+    margin: 0.35rem 0.5rem;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* User pill & sign out */
+.user-pill {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  background: rgba(255, 255, 255, 0.08);
+  padding: 0.35rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.82rem;
+
+  .user-greeting {
+    color: #e2e8f0;
+  }
+
+  .admin-badge {
+    background: #ea580c;
+    color: #fff;
+    font-size: 0.68rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    padding: 0.1rem 0.4rem;
+    border-radius: 9999px;
+  }
+}
+
+.btn-signout {
+  color: #94a3b8;
+  background: transparent;
+  border: 1px solid #334155;
+  padding: 0.35rem 0.75rem;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+
+  &:hover {
+    color: #ef4444;
+    border-color: #ef4444;
+    background: rgba(239, 68, 68, 0.08);
+  }
+}
+
+.btn-signin {
+  color: #fff;
+  background: #ea580c;
+  padding: 0.45rem 1rem;
+  border-radius: 8px;
+  text-decoration: none;
+  font-size: 0.85rem;
+  font-weight: 600;
+  transition: background 0.2s;
+
+  &:hover {
+    background: #c2410c;
+  }
+}
+
+@media (max-width: 768px) {
+  .store-nav {
+    padding: 0.75rem 1rem;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+  }
+
+  .dropdown-menu {
+    right: auto;
+    left: 0;
+  }
+}

@@ -1,0 +1,113 @@
+<nav class="store-nav">
+  <a class="brand" [routerLink]="isAdmin ? '/admin' : '/shop'">AURA MART</a>
+  <div class="links">
+    @if (!isAdmin) {
+      <a routerLink="/shop" routerLinkActive="active-link" class="nav-link">🛍️ Storefront</a>
+    }
+
+    @if (loggedIn$ | async) {
+      @if (isAdmin) {
+        <div class="admin-dropdown-container">
+          <button
+            type="button"
+            class="admin-menu-btn"
+            [class.open]="isAdminMenuOpen"
+            (click)="toggleAdminMenu()"
+            aria-haspopup="true"
+            [attr.aria-expanded]="isAdminMenuOpen"
+          >
+            <span class="btn-icon">👑</span>
+            <span class="btn-text">Admin Masters</span>
+            <span class="arrow" [class.rotated]="isAdminMenuOpen">▾</span>
+          </button>
+
+          @if (isAdminMenuOpen) {
+            <div class="menu-backdrop" (click)="closeAdminMenu()"></div>
+            <div class="dropdown-menu">
+              <div class="menu-header">
+                <span class="menu-title">CONFIGURATION MASTERS</span>
+              </div>
+
+              <a
+                routerLink="/admin"
+                [queryParams]="{ tab: 'items' }"
+                (click)="closeAdminMenu()"
+                class="menu-option"
+              >
+                <span class="option-icon">📦</span>
+                <div class="option-content">
+                  <strong>Item Master</strong>
+                  <small>Manage products, pricing & inventory</small>
+                </div>
+              </a>
+
+              <a
+                routerLink="/admin"
+                [queryParams]="{ tab: 'categories' }"
+                (click)="closeAdminMenu()"
+                class="menu-option"
+              >
+                <span class="option-icon">🏷️</span>
+                <div class="option-content">
+                  <strong>Category Master</strong>
+                  <small>Create & organize store categories</small>
+                </div>
+              </a>
+
+              <a
+                routerLink="/admin"
+                [queryParams]="{ tab: 'brands' }"
+                (click)="closeAdminMenu()"
+                class="menu-option"
+              >
+                <span class="option-icon">🏢</span>
+                <div class="option-content">
+                  <strong>Brand Master</strong>
+                  <small>Manufacturers & brand labels</small>
+                </div>
+              </a>
+
+              <a
+                routerLink="/admin"
+                [queryParams]="{ tab: 'orders' }"
+                (click)="closeAdminMenu()"
+                class="menu-option"
+              >
+                <span class="option-icon">📋</span>
+                <div class="option-content">
+                  <strong>Orders Master</strong>
+                  <small>Track & update customer orders</small>
+                </div>
+              </a>
+
+              <div class="menu-divider"></div>
+
+              <a
+                routerLink="/admin"
+                [queryParams]="{ tab: 'items', action: 'new-item' }"
+                (click)="closeAdminMenu()"
+                class="menu-option action-option"
+              >
+                <span class="option-icon">➕</span>
+                <div class="option-content">
+                  <strong>+ Add New Product</strong>
+                  <small>Quick product onboarding</small>
+                </div>
+              </a>
+            </div>
+          }
+        </div>
+      }
+
+      <div class="user-pill">
+        <span class="user-greeting">Hi, {{ username }}</span>
+        @if (isAdmin) {
+          <span class="admin-badge">Admin</span>
+        }
+      </div>
+      <button type="button" class="btn-signout" (click)="logout()">Sign out</button>
+    } @else {
+      <a routerLink="/login" class="btn-signin">Sign in</a>
+    }
+  </div>
+</nav>

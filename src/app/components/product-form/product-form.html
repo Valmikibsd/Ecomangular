@@ -1,0 +1,387 @@
+<section class="admin-master">
+  <header class="master-header">
+    <div class="header-title">
+      <span class="badge-role">👑 System Administrator</span>
+      <h1>Master Management Portal</h1>
+      <p>Configure items, categories, brands, and manage customer orders.</p>
+    </div>
+    <div class="header-actions">
+      <button type="button" class="btn-return" (click)="loadAllMasters()">🔄 Refresh Data</button>
+    </div>
+  </header>
+
+  <!-- Global Alerts -->
+  @if (successMessage) {
+    <div class="alert success">
+      <span>✅ {{ successMessage }}</span>
+      <button type="button" (click)="successMessage = ''">✕</button>
+    </div>
+  }
+  @if (errorMessage) {
+    <div class="alert error">
+      <span>⚠️ {{ errorMessage }}</span>
+      <button type="button" (click)="errorMessage = ''">✕</button>
+    </div>
+  }
+
+  <!-- Master Tabs Navigation -->
+  <nav class="master-tabs">
+    <button
+      type="button"
+      [class.active]="activeTab === 'items'"
+      (click)="setTab('items')"
+    >
+      📦 Item Master ({{ products.length }})
+    </button>
+    <button
+      type="button"
+      [class.active]="activeTab === 'categories'"
+      (click)="setTab('categories')"
+    >
+      🏷️ Category Master ({{ categories.length }})
+    </button>
+    <button
+      type="button"
+      [class.active]="activeTab === 'brands'"
+      (click)="setTab('brands')"
+    >
+      🏢 Brand Master ({{ brands.length }})
+    </button>
+    <button
+      type="button"
+      [class.active]="activeTab === 'orders'"
+      (click)="setTab('orders')"
+    >
+      📋 Orders Master ({{ orders.length }})
+    </button>
+  </nav>
+
+  <!-- TAB 1: ITEM / PRODUCT MASTER -->
+  @if (activeTab === 'items') {
+    <div class="tab-content">
+      <div class="toolbar">
+        <div class="search-box">
+          <input
+            type="text"
+            [(ngModel)]="productSearch"
+            placeholder="Search items by name, category, brand..."
+          />
+        </div>
+        <button type="button" class="btn-primary" (click)="openAddProduct()">
+          + Add New Item
+        </button>
+      </div>
+
+      <div class="table-card">
+        <table class="master-table">
+          <thead>
+            <tr>
+              <th>Image</th>
+              <th>Product Name</th>
+              <th>Category</th>
+              <th>Brand</th>
+              <th>Price</th>
+              <th>Stock</th>
+              <th>Rating</th>
+              <th class="text-right">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (p of filteredProducts; track p.id) {
+              <tr>
+                <td class="col-thumb">
+                  <img [src]="p.image || 'https://picsum.photos/seed/default/50/50'" [alt]="p.name" />
+                </td>
+                <td>
+                  <strong>{{ p.name }}</strong>
+                  <p class="table-desc">{{ p.description }}</p>
+                </td>
+                <td>
+                  <span class="badge-cat">{{ p.category }}</span>
+                </td>
+                <td>{{ p.brand }}</td>
+                <td><strong>{{ p.price | currency }}</strong></td>
+                <td>
+                  <span [class.stock-out]="p.stock <= 0" [class.stock-low]="p.stock > 0 && p.stock < 10" class="badge-stock">
+                    {{ p.stock > 0 ? p.stock + ' in stock' : 'Out of stock' }}
+                  </span>
+                </td>
+                <td>⭐ {{ p.rating | number: '1.1-1' }} ({{ p.reviewCount }})</td>
+                <td class="text-right actions-col">
+                  <button type="button" class="btn-edit" (click)="openEditProduct(p)">Edit</button>
+                  <button type="button" class="btn-delete" (click)="deleteProduct(p)">Delete</button>
+                </td>
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="8" class="empty-state">No products found matching your search.</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  }
+
+  <!-- TAB 2: CATEGORY MASTER -->
+  @if (activeTab === 'categories') {
+    <div class="tab-content">
+      <div class="split-view">
+        <div class="form-card">
+          <h3>Add New Category</h3>
+          <p class="subtitle">Create product categories for catalog segmentation.</p>
+
+          <label class="form-label">
+            Category Name *
+            <input type="text" [(ngModel)]="newCategory.name" placeholder="e.g. Health & Wellness" />
+          </label>
+
+          <label class="form-label">
+            Description
+            <textarea [(ngModel)]="newCategory.description" rows="3" placeholder="Category brief description..."></textarea>
+          </label>
+
+          <button type="button" class="btn-primary" [disabled]="loading || !newCategory.name.trim()" (click)="addCategory()">
+            + Save Category
+          </button>
+        </div>
+
+        <div class="table-card">
+          <h3>Configured Categories ({{ categories.length }})</h3>
+          <table class="master-table">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Category Name</th>
+                <th>Description</th>
+                <th class="text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (cat of categories; track cat.id) {
+                <tr>
+                  <td>#{{ cat.id }}</td>
+                  <td><strong>{{ cat.name }}</strong></td>
+                  <td>{{ cat.description || '—' }}</td>
+                  <td class="text-right">
+                    <button type="button" class="btn-delete" (click)="deleteCategory(cat)">Delete</button>
+                  </td>
+                </tr>
+              } @empty {
+                <tr>
+                  <td colspan="4" class="empty-state">No categories defined yet.</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- TAB 3: BRAND MASTER -->
+  @if (activeTab === 'brands') {
+    <div class="tab-content">
+      <div class="split-view">
+        <div class="form-card">
+          <h3>Add New Brand</h3>
+          <p class="subtitle">Register manufacturers and brand labels.</p>
+
+          <label class="form-label">
+            Brand Name *
+            <input type="text" [(ngModel)]="newBrand.name" placeholder="e.g. Apex Dynamics" />
+          </label>
+
+          <label class="form-label">
+            Description
+            <textarea [(ngModel)]="newBrand.description" rows="3" placeholder="Brand story or details..."></textarea>
+          </label>
+
+          <button type="button" class="btn-primary" [disabled]="loading || !newBrand.name.trim()" (click)="addBrand()">
+            + Save Brand
+          </button>
+        </div>
+
+        <div class="table-card">
+          <h3>Configured Brands ({{ brands.length }})</h3>
+          <table class="master-table">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Brand Name</th>
+                <th>Description</th>
+                <th class="text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (brand of brands; track brand.id) {
+                <tr>
+                  <td>#{{ brand.id }}</td>
+                  <td><strong>{{ brand.name }}</strong></td>
+                  <td>{{ brand.description || '—' }}</td>
+                  <td class="text-right">
+                    <button type="button" class="btn-delete" (click)="deleteBrand(brand)">Delete</button>
+                  </td>
+                </tr>
+              } @empty {
+                <tr>
+                  <td colspan="4" class="empty-state">No brands defined yet.</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- TAB 4: ORDERS MASTER -->
+  @if (activeTab === 'orders') {
+    <div class="tab-content">
+      <div class="table-card">
+        <div class="card-head">
+          <h3>Customer Orders Overview</h3>
+          <button type="button" class="btn-refresh" (click)="loadOrders()">🔄 Refresh</button>
+        </div>
+        <table class="master-table">
+          <thead>
+            <tr>
+              <th>Order ID</th>
+              <th>Customer</th>
+              <th>Date</th>
+              <th>Total Amount</th>
+              <th>Payment Info</th>
+              <th>Items</th>
+              <th>Live Status</th>
+              <th class="text-right">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (o of orders; track o.id) {
+              <tr>
+                <td><strong>#{{ o.id }}</strong></td>
+                <td>Customer #{{ o.userId }}</td>
+                <td>{{ o.orderDate | date: 'short' }}</td>
+                <td><strong>{{ o.totalAmount | currency }}</strong></td>
+                <td>
+                  <span class="pay-tag">{{ o.paymentMethod || 'Credit Card' }}</span>
+                  @if (o.transactionId) {
+                    <small class="txn-ref">{{ o.transactionId }}</small>
+                  }
+                </td>
+                <td>
+                  <span class="items-count">{{ o.items.length }} item(s)</span>
+                  <div class="item-pills">
+                    @for (item of o.items; track item.id) {
+                      <span class="item-pill">{{ item.quantity }}x {{ item.productName }}</span>
+                    }
+                  </div>
+                </td>
+                <td>
+                  <select
+                    [ngModel]="o.status"
+                    (ngModelChange)="onOrderStatusChange(o, $event)"
+                    class="status-select"
+                    [class.status-pending]="o.status === 'Pending'"
+                    [class.status-paid]="o.status === 'Paid'"
+                    [class.status-processing]="o.status === 'Processing'"
+                    [class.status-shipped]="o.status === 'Shipped'"
+                    [class.status-delivered]="o.status === 'Delivered'"
+                  >
+                    @for (st of orderStatuses; track st) {
+                      <option [value]="st">{{ st }}</option>
+                    }
+                  </select>
+                </td>
+                <td class="text-right">
+                  <button type="button" class="btn-delete" (click)="deleteOrder(o)">Delete</button>
+                </td>
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="8" class="empty-state">No customer orders placed yet.</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  }
+
+  <!-- ADD / EDIT PRODUCT MODAL OVERLAY -->
+  @if (isItemModalOpen) {
+    <div class="modal-backdrop" (click)="closeItemModal()"></div>
+    <div class="modal-card">
+      <div class="modal-header">
+        <h2>{{ isEditingProduct ? 'Edit Item' : 'Add New Item' }}</h2>
+        <button type="button" class="btn-close" (click)="closeItemModal()">✕</button>
+      </div>
+
+      <div class="modal-body">
+        <div class="form-grid">
+          <label class="form-label full">
+            Product Name *
+            <input type="text" [(ngModel)]="productForm.name" placeholder="Item name" />
+          </label>
+
+          <label class="form-label">
+            Category *
+            <select [(ngModel)]="productForm.category">
+              @for (c of categories; track c.id) {
+                <option [value]="c.name">{{ c.name }}</option>
+              }
+            </select>
+          </label>
+
+          <label class="form-label">
+            Brand *
+            <select [(ngModel)]="productForm.brand">
+              @for (b of brands; track b.id) {
+                <option [value]="b.name">{{ b.name }}</option>
+              }
+            </select>
+          </label>
+
+          <label class="form-label">
+            Unit Price ($) *
+            <input type="number" min="0.01" step="0.01" [(ngModel)]="productForm.price" />
+          </label>
+
+          <label class="form-label">
+            Initial Stock *
+            <input type="number" min="0" [(ngModel)]="productForm.stock" />
+          </label>
+
+          <label class="form-label full">
+            Image URL
+            <input type="text" [(ngModel)]="productForm.image" placeholder="https://..." />
+          </label>
+
+          <label class="form-label full">
+            Available Colors (comma-separated)
+            <input type="text" [(ngModel)]="productForm.colors" placeholder="Black, Silver, Blue" />
+          </label>
+
+          <label class="form-label full">
+            Description
+            <textarea rows="3" [(ngModel)]="productForm.description" placeholder="Product details..."></textarea>
+          </label>
+        </div>
+
+        @if (productForm.image) {
+          <div class="image-preview">
+            <span>Image Preview:</span>
+            <img [src]="productForm.image" alt="Preview" />
+          </div>
+        }
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn-secondary" (click)="closeItemModal()">Cancel</button>
+        <button type="button" class="btn-primary" [disabled]="loading || !productForm.name.trim()" (click)="saveProduct()">
+          {{ isEditingProduct ? 'Update Item' : 'Create Item' }}
+        </button>
+      </div>
+    </div>
+  }
+</section>

@@ -1,0 +1,22 @@
+<div class="login-page">
+  <aside class="login-hero">
+    <div class="hero-badge">AURA MART</div>
+    <h1>Create a customer account.</h1>
+    <p>This demo still signs in with <strong>abc / 123</strong> after you register.</p>
+  </aside>
+  <main class="login-panel">
+    <div class="login-card">
+      <h2>Register</h2>
+      <form [formGroup]="form" (ngSubmit)="submit()">
+        <label>Username <input formControlName="username" /></label>
+        <label>Email <input formControlName="email" /></label>
+        <label>Password <input type="password" formControlName="password" /></label>
+        <button class="cta" type="submit">Create account</button>
+        @if (error) {
+          <div class="error">{{ error }}</div>
+        }
+      </form>
+      <p class="footer-note"><a routerLink="/login">Back to sign in</a></p>
+    </div>
+  </main>
+</div>
