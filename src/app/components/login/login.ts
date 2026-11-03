@@ -42,6 +42,10 @@ export class Login implements OnInit {
     this.error = '';
   }
 
+  fillDemo() {
+    this.fillCustomerDemo();
+  }
+
   fillAdminDemo() {
     this.form.setValue({ username: 'admin', password: 'admin123' });
     this.error = '';
