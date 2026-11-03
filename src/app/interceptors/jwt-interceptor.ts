@@ -51,7 +51,7 @@ export class JwtInterceptor implements HttpInterceptor {
             const access = res?.accessToken || res?.token;
             this.refreshing = false;
             if (!access) {
-              this.auth().logout();
+              this.auth().logout().subscribe();
               return throwError(() => new Error('No access token returned on refresh'));
             }
             this.refresh$.next(access);
@@ -61,7 +61,7 @@ export class JwtInterceptor implements HttpInterceptor {
             this.refreshing = false;
             this.refresh$.error(err);
             this.refresh$ = new BehaviorSubject<string | null>(null);
-            this.auth().logout();
+            this.auth().logout().subscribe();
             return throwError(() => err);
           })
         );
@@ -82,7 +82,8 @@ export class JwtInterceptor implements HttpInterceptor {
     return (
       req.url.includes('/api/auth/login') ||
       req.url.includes('/api/auth/register') ||
-      req.url.includes('/api/auth/refresh')
+      req.url.includes('/api/auth/refresh') ||
+      req.url.includes('/api/auth/logout')
     );
   }
 

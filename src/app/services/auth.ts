@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { BehaviorSubject, Observable, tap } from 'rxjs';
+import { BehaviorSubject, Observable, catchError, of, switchMap, tap, throwError, timeout } from 'rxjs';
 import { AuthResponse, LoginDto, RegisterDto } from '../models/auth.models';
 import { Router } from '@angular/router';
 import { decodeJwt, isTokenExpired } from '../utils/jwt.util';
@@ -13,6 +13,7 @@ export class AuthService {
   private readonly accessKey = 'ecom_access_token';
   private readonly refreshKey = 'ecom_refresh_token';
   private auth$ = new BehaviorSubject<boolean>(this.hasValidSession());
+  private sessionVersion = 0;
 
   constructor(private http: HttpClient, private router: Router) {}
 
@@ -30,8 +31,13 @@ export class AuthService {
   }
 
   login(dto: LoginDto) {
+    const sessionVersion = this.sessionVersion;
     return this.http.post<AuthResponse>(`${API_URL}api/auth/login`, dto).pipe(
-      tap((res) => this.persist(res))
+      tap((res) => {
+        if (sessionVersion === this.sessionVersion) {
+          this.persist(res);
+        }
+      })
     );
   }
 
@@ -40,18 +46,36 @@ export class AuthService {
   }
 
   refreshAccessToken() {
+    const sessionVersion = this.sessionVersion;
     return this.http
       .post<AuthResponse>(`${API_URL}api/auth/refresh`, {
         refreshToken: this.getRefreshToken()
       })
-      .pipe(tap((res) => this.persist(res)));
+      .pipe(
+        switchMap((res) => {
+          if (sessionVersion !== this.sessionVersion) {
+            return throwError(() => new Error('Session ended before token refresh completed'));
+          }
+          this.persist(res);
+          return of(res);
+        })
+      );
   }
 
-  logout() {
-    localStorage.removeItem(this.accessKey);
-    localStorage.removeItem(this.refreshKey);
-    this.auth$.next(false);
-    this.router.navigate(['/login']);
+  logout(): Observable<void> {
+    const refreshToken = this.getRefreshToken();
+    this.sessionVersion += 1;
+    this.clearSession();
+    void this.router.navigate(['/login']);
+
+    if (!refreshToken) {
+      return of(void 0);
+    }
+
+    return this.http.post<void>(`${API_URL}api/auth/logout`, { refreshToken }).pipe(
+      timeout({ first: 5000 }),
+      catchError(() => of(void 0))
+    );
   }
 
   getToken(): string | null {
@@ -104,5 +128,11 @@ export class AuthService {
       localStorage.setItem(this.refreshKey, res.refreshToken);
     }
     this.auth$.next(true);
+  }
+
+  private clearSession() {
+    localStorage.removeItem(this.accessKey);
+    localStorage.removeItem(this.refreshKey);
+    this.auth$.next(false);
   }
 }

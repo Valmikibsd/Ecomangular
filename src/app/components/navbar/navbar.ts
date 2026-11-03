@@ -41,6 +41,6 @@ export class Navbar {
 
   logout() {
     this.closeAdminMenu();
-    this.auth.logout();
+    this.auth.logout().subscribe();
   }
 }
